@@ -331,6 +331,9 @@ ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml sshKey "$(cat id_rsa_cr
 # Create the manifests using the INSTALL_DIR
 ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create manifests || exit 1
 
+cp file.yaml ${INSTALL_DIR}/openshift/0000_00_cluster-version-operator_00_file.yaml
+cp file2.yaml ${INSTALL_DIR}/openshift/0000_00_cluster-version-operator_00_file2.yaml
+
 # Add custom domain to cluster-ingress
 ${YQ} write --inplace ${INSTALL_DIR}/manifests/cluster-ingress-02-config.yml spec[domain] apps-${CRC_VM_NAME}.${BASE_DOMAIN}
 # Add master memory to 12 GB and 6 cpus 
@@ -410,9 +413,6 @@ ${OC} delete statefulset,deployment,daemonset --all -n openshift-kube-storage-ve
 # Delete the v1beta1.metrics.k8s.io apiservice since we are already scale down cluster wide monitioring.
 # Since this CRD block namespace deletion forever.
 ${OC} delete apiservice v1beta1.metrics.k8s.io
-
-# Scale route deployment from 2 to 1
-${OC} scale --replicas=1 ingresscontroller/default -n openshift-ingress-operator
 
 # Set default route for registry CRD from false to true.
 ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge
